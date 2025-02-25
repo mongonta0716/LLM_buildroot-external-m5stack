@@ -6,7 +6,7 @@ if [ ! -f '/var/cmm_switch.lock' ] ; then
 	CMM_VALUE=$(grep 'insmod /soc/ko/ax_cmm.ko cmmpool=anonymous' "/soc/scripts/auto_load_all_drv.sh" | sed -n 's/.*cmmpool=anonymous,0,0x[0-9A-Fa-f]*,\([0-9]*\)M.*/\1/p')
 	MEM_VALUE=$(grep -o 'mem=[0-9]*M' /proc/cmdline | sed 's/mem=\([0-9]*\)M/\1/')
 	ALL_MEM=4096
-	input=2048
+	input=1536
 	NEW_CMM_VALUE=$(expr $ALL_MEM - $input)
 	NEW_MEM_VALUE=$input
 	tmp_val=$(expr $NEW_MEM_VALUE \* 1024 \* 1024)
