@@ -12,8 +12,14 @@ Version: 1.0.1
 # SPDX-FileCopyrightText: 2024 M5Stack Technology CO LTD
 #
 # SPDX-License-Identifier: MIT
-
-use: sudo python3 axdl_tool.py --axp ./M5_LLM_ubuntu22.04_20250210.axp
+linux:
+    sudo apt install libusb
+    sudo pip install pyusb tqdm
+    sudo python3 axdl_tool.py --axp ./M5_LLM_ubuntu22.04_20250210.axp
+mac:
+    brew install libusb
+    pip install pyusb tqdm
+    sudo python3 axdl_tool.py --axp ./M5_LLM_ubuntu22.04_20250210.axp
 
 """
 import argparse
@@ -78,7 +84,7 @@ class USBSerialPort:
         self.is_open = False
         self._kernel_driver_detached = False
 
-    def open(self, retry_count=15):
+    def open(self, retry_count=60):
         """
         Find the device, set configuration, claim the interface,
         and locate the Bulk endpoints (0x01 for OUT, 0x81 for IN).
