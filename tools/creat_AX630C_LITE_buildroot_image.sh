@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-
+export EXT_BOARD_NAME="_AX630C_LITE"
 clone_buildroot() {
     if [ -d '../buildroot' ] ; then
         [ -d 'buildroot' ] || cp -r ../buildroot buildroot
@@ -18,7 +18,7 @@ clone_buildroot() {
         [ -d 'dl' ] || 7z x dl.7z -odl
         [ -d 'dl' ] || { echo "not found dl" && exit -1; }
     fi
-    [ -f '../../../board/m5stack/opt.tar.gz' ] || wget https://github.com/m5stack/LLM_buildroot-external-m5stack/releases/download/v0.0.0/opt.tar.gz -O ../../../board/m5stack/opt.tar.gz
+    [ -f '../../../board/m5stack/module_kit/image_support/opt.tar.gz' ] || wget https://github.com/m5stack/LLM_buildroot-external-m5stack/releases/download/v0.0.0/opt.tar.gz -O ../../../board/m5stack/module_kit/image_support/opt.tar.gz
     popd
 }
 

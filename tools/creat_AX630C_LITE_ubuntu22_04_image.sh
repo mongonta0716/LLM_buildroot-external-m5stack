@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2024 M5Stack Technology CO LTD
 #
 # SPDX-License-Identifier: MIT
-
+export EXT_BOARD_NAME="_AX630C_LITE"
 if [ -z "${EXT_ROOTFS_SIZE}" ]; then
     export EXT_ROOTFS_SIZE=30606884864
 fi
@@ -116,8 +116,8 @@ sudo cp build_rootfs/usr/lib/libcrypto.so.1.1 rootfs/usr/lib/ -a
 sudo umount build_rootfs
 sudo rm build_rootfs rootfs_sparse.ext4 rootfs_.ext4 -rf
 
-sudo tar zxf ../../board/m5stack/soc.tar.gz -C rootfs/soc
-[ -f "../../board/m5stack/opt.tar.gz" ] && sudo tar zxf ../../board/m5stack/opt.tar.gz -C rootfs/opt
+sudo tar zxf ../../board/m5stack/module_kit/image_support/soc.tar.gz -C rootfs/soc
+[ -f "../../board/m5stack/module_kit/image_support/opt.tar.gz" ] && sudo tar zxf ../../board/m5stack/module_kit/image_support/opt.tar.gz -C rootfs/opt
 
 sudo find rootfs -name ".empty" -exec rm {} -f \;
 
@@ -127,7 +127,7 @@ sudo ../bin/make_ext4fs -l ${EXT_ROOTFS_SIZE} -s axera-image/rootfs_sparse.ext4 
 cd axera-image
 zip -r ../output.zip .
 cd ..
-mv output.zip M5_LLM_ubuntu22.04_$(date +%Y%m%d).axp
+mv output.zip M5_LLM_ubuntu22.04_$(date +%Y%m%d)${EXT_BOARD_NAME}.axp
 
 sudo rm rootfs ubuntu-base-22.04.5-base-arm64 -rf
 

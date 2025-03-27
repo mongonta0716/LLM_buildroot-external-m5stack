@@ -127,7 +127,7 @@ sudo ../bin/make_ext4fs -l ${EXT_ROOTFS_SIZE} -s axera-image/rootfs_sparse.ext4 
 cd axera-image
 zip -r ../output.zip .
 cd ..
-mv output.zip M5_LLM_ubuntu22.04_$(date +%Y%m%d).axp
+mv output.zip M5_LLM_ubuntu22.04_$(date +%Y%m%d)${EXT_BOARD_NAME}.axp
 
 sudo rm rootfs ubuntu-base-22.04.5-base-arm64 -rf
 

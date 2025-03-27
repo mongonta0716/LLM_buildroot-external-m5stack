@@ -121,8 +121,8 @@ sudo rm build_rootfs rootfs_sparse.ext4 rootfs_.ext4 -rf
 
 
 
-sudo tar zxf ../../board/m5stack/soc.tar.gz -C rootfs/soc
-[ -f "../../board/m5stack/opt.tar.gz" ] && sudo tar zxf ../../board/m5stack/opt.tar.gz -C rootfs/opt
+sudo tar zxf ../../board/m5stack/module_LLM/image_support/soc.tar.gz -C rootfs/soc
+[ -f "../../board/m5stack/module_LLM/image_support/opt.tar.gz" ] && sudo tar zxf ../../board/m5stack/module_LLM/image_support/opt.tar.gz -C rootfs/opt
 
 sudo find rootfs -name ".empty" -exec rm {} -f \;
 
@@ -132,7 +132,7 @@ sudo ../bin/make_ext4fs -l ${EXT_ROOTFS_SIZE} -s axera-image/rootfs_sparse.ext4 
 cd axera-image
 zip -r ../output.zip .
 cd ..
-mv output.zip M5_LLM_ubuntu22.04_$(date +%Y%m%d)_mini.axp
+mv output.zip M5_LLM_ubuntu22.04_$(date +%Y%m%d)${EXT_BOARD_NAME}_mini.axp
 
 sudo rm rootfs ubuntu-base-22.04.5-base-arm64 -rf
 
