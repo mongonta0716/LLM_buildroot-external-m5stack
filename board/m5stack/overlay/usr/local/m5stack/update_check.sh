@@ -26,7 +26,7 @@ if [ -n "$update_file" ] ; then
     if [[ -n "$line" && ! "$line" =~ ^# ]]; then
         if [[ "$line" =~ deb$ ]]; then
             echo "install ${dir_path}/$line .." >>  $LOGFILE
-            dpkg -i ${dir_path}/$line >> $LOGFILE 2>&1
+            yes | apt install ${dir_path}/$line >> $LOGFILE 2>&1
             if [ "$?" -ne 0 ] ; then 
                 success_flag=0
             fi

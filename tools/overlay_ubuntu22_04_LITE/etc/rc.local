@@ -1,9 +1,11 @@
 #!/bin/bash
 # /usr/local/m5stack/bin/S03espc6wifi start
-bash /soc/scripts/startup-script.sh
-bash /usr/local/m5stack/startup-script.sh
 
-bash -c ". /etc/profile ; /soc/scripts/usb-adb.sh start"
+[ -f '/etc/rc.local.d/rcS' ] && bash /etc/rc.local.d/rcS
 
-modprobe ledtrig-heartbeat
+
+
+
+
+
 exit 0

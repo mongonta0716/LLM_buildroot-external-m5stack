@@ -279,6 +279,9 @@ do_esp32c6_wifi() {
     if ! grep -q "^/usr/local/m5stack/bin/S03espc6wifi" /etc/rc.local; then
       CURRENT_STATUS="no"
     fi
+    if [ ! -L '/etc/rc.local.d/S03espc6wifi' ]; then
+      CURRENT_STATUS="no"
+    fi
   fi
   if [ "$OS_NAME" = "Buildroot" ] ; then
     if [ ! -L '/etc/init.d/S03espc6wifi' ] ; then
@@ -291,7 +294,11 @@ do_esp32c6_wifi() {
   if [ $RET -eq 0 ]; then
     if [ "$OS_NAME" = "Ubuntu" ] ; then
       if [ "$CURRENT_STATUS" = "no" ]; then
-          sed -i '2a /usr/local/m5stack/bin/S03espc6wifi start' /etc/rc.local
+          if [ -d '/etc/rc.local.d' ]; then
+            ln -s /usr/local/m5stack/bin/S03espc6wifi /etc/rc.local.d/S03espc6wifi
+          else
+            sed -i '2a /usr/local/m5stack/bin/S03espc6wifi start' /etc/rc.local
+          fi
           sync
           /usr/local/m5stack/bin/S03espc6wifi start
       fi
@@ -307,7 +314,11 @@ do_esp32c6_wifi() {
   elif [ $RET -eq 1 ]; then
     if [ "$OS_NAME" = "Ubuntu" ] ; then
       if [ "$CURRENT_STATUS" = "yes" ]; then
-          sed -i /etc/rc.local -e "/^.*S03espc6wifi.*/d"
+          if [ -d '/etc/rc.local.d' ]; then
+            rm /etc/rc.local.d/S03espc6wifi
+          else
+            sed -i /etc/rc.local -e "/^.*S03espc6wifi.*/d"
+          fi
           sync
           rmmod esp32_sdio
           /sbin/devmem 0x480100c 32 0x00

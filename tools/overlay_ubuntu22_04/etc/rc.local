@@ -1,6 +1,10 @@
 #!/bin/bash
-bash /soc/scripts/startup-script.sh
-bash /usr/local/m5stack/startup-script.sh
+[ -f '/etc/rc.local.d/rcS' ] && bash /etc/rc.local.d/rcS
 
-bash -c ". /etc/profile ; /soc/scripts/usb-adb.sh start"
+
+
+
+
+
+
 exit 0
