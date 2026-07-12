@@ -27,7 +27,14 @@ make_buildroot() {
     cd buildroot
     make BR2_EXTERNAL=../../.. m5stack_module_llm_4_19_defconfig
     [[ -v ROOTFS_SIZE ]] && sed -i 's/^\(BR2_TARGET_ROOTFS_EXT2_SIZE=\).*$/\1"'"${ROOTFS_SIZE}"'"/' .config
-    make -j `nproc`
+    # Buildroot's Kconfig packages (busybox, linux, ...) run
+    # `yes "" | $(MAKE) oldconfig` (package/pkg-kconfig.mk), which can
+    # corrupt GNU Make's jobserver pipe ("write jobserver: Bad file
+    # descriptor") when the top-level make enables it via -jN under
+    # emulation (e.g. Rosetta). Each package still builds with its own
+    # internal parallelism (BR2_JLEVEL), so this mainly serializes
+    # package-to-package orchestration rather than each package's build.
+    make
 }
 
 sudo apt install debianutils sed make binutils build-essential gcc g++ bash patch gzip bzip2 perl tar cpio unzip rsync file bc git cmake p7zip-full python3 python3-pip expect libssl-dev qemu-user-static android-sdk-libsparse-utils -y

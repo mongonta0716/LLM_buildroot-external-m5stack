@@ -3,6 +3,19 @@
 #
 # SPDX-License-Identifier: MIT
 
+# This script chroots into an aarch64 Ubuntu rootfs and uses prebuilt
+# x86_64 Linux binaries, neither of which work on a non-Linux host
+# (e.g. macOS). On such hosts, relaunch ourselves inside the x86_64
+# Linux Docker container defined in ../docker, starting Docker Desktop
+# if needed.
+if [ "$(uname -s)" != "Linux" ] && [ -z "${M5STACK_IN_BUILD_CONTAINER:-}" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    REPO_NAME="$(basename "$(dirname "$SCRIPT_DIR")")"
+    export M5STACK_DOCKER_WORKDIR="$REPO_NAME/tools"
+    export M5STACK_DOCKER_PRIVILEGED=1
+    exec "$SCRIPT_DIR/../docker/build.sh" env M5STACK_IN_BUILD_CONTAINER=1 "./$(basename "$0")"
+fi
+
 if [ -z "${EXT_ROOTFS_SIZE}" ]; then
     export EXT_ROOTFS_SIZE=30606884864
 fi
@@ -133,7 +146,13 @@ sudo ../bin/make_ext4fs -l ${EXT_ROOTFS_SIZE} -s axera-image/rootfs_sparse.ext4 
 cd axera-image
 zip -r ../output.zip .
 cd ..
-mv output.zip M5_LLM_ubuntu22.04_$(date +%Y%m%d)${EXT_BOARD_NAME}.axp
+IMAGE_NAME="M5_LLM_ubuntu22.04_$(date +%Y%m%d)${EXT_BOARD_NAME}.axp"
+mv output.zip "$IMAGE_NAME"
+
+# build_Module_LLM_ubuntu22_04/ may be a Docker volume (not visible on
+# the host) rather than the bind-mounted repo tree, so also drop the
+# finished image one level up in tools/, which always is.
+cp "$IMAGE_NAME" ../
 
 sudo rm rootfs ubuntu-base-22.04.5-base-arm64 -rf
 

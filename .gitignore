@@ -1,3 +1,6 @@
-tools
-.vscode/settings.json
+.claude
+.vscode
+tools/bin
+tools/*.axp
+tools/*.tar.gz
 **opt.tar.gz

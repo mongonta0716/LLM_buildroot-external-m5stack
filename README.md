@@ -79,6 +79,30 @@ There are also optional dependencies if you want to use Buildroot features
 like interface configuration, legal information or documentation.
 Please see the [corresponding manual section](https://buildroot.org/downloads/manual/manual.html#requirement-optional).
 
+#### Apple Silicon (M1/M2/M3/M4) Macs
+
+This `BR2_EXTERNAL` tree bundles prebuilt **x86_64 Linux** binaries with
+no source included (the `aarch64-none-linux-gnu` toolchain under
+[toolchain/](toolchain/), and `tools/bin/ax_gzip`, `img2simg`,
+`make_ext4fs`). These cannot run natively on macOS, nor on arm64 Linux,
+so building directly on an Apple Silicon Mac (even inside an arm64
+Linux VM) is not possible.
+
+Instead, use the provided [docker/](docker/) setup, which builds and
+runs an `x86_64` (`linux/amd64`) Ubuntu container. Docker Desktop
+transparently emulates this via Rosetta on Apple Silicon, so the
+bundled binaries run unmodified:
+
+```bash
+# from the directory containing both buildroot/ and this repo
+$ ./LLM_buildroot-external-m5stack/docker/build.sh
+root@...:/work/buildroot# make BR2_EXTERNAL=../LLM_buildroot-external-m5stack m5stack_module_llm_4_19_defconfig
+root@...:/work/buildroot# make
+```
+
+You can also pass a command directly instead of getting a shell, e.g.
+`./LLM_buildroot-external-m5stack/docker/build.sh make`.
+
 ### Getting the code
 
 This `BR2_EXTERNAL` tree is designed to work with the `2023.02.x` LTS
