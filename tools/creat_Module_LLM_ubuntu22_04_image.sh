@@ -144,7 +144,18 @@ sudo bash ../build_rtl8821cu_module.sh "$BUILDROOT_OUTPUT" rootfs || exit $?
 sudo find rootfs -name ".empty" -exec rm {} -f \;
 
 sudo rm axera-image/rootfs_sparse.ext4
-sudo ../bin/make_ext4fs -l ${EXT_ROOTFS_SIZE} -s axera-image/rootfs_sparse.ext4 ubuntu-base-22.04.5-base-arm64/
+sudo ../bin/make_ext4fs -l ${EXT_ROOTFS_SIZE} -s axera-image/rootfs_sparse.ext4 ubuntu-base-22.04.5-base-arm64/ || exit $?
+
+# The bundled make_ext4fs can leave unused inode-bitmap padding bits clear.
+# Repair the unmounted filesystem before packaging; e2fsck returns 1 when
+# it successfully corrects an error, and higher values must stop the build.
+sudo simg2img axera-image/rootfs_sparse.ext4 rootfs-final.ext4 || exit $?
+sudo e2fsck -pf rootfs-final.ext4
+fsck_status=$?
+[ "$fsck_status" -le 1 ] || exit "$fsck_status"
+# Preserve skipped ranges for AXDL: img2simg expands them into FILL writes.
+sudo python3 ../update_sparse_ext4.py axera-image/rootfs_sparse.ext4 rootfs-final.ext4 || exit $?
+sudo rm -f rootfs-final.ext4 || exit $?
 
 cd axera-image
 zip -r ../output.zip .

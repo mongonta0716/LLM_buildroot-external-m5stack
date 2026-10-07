@@ -142,6 +142,54 @@ bootloader, Linux kernel, root filesystem. It might take between 30
 and 60 minutes depending on the configuration you have chosen and how
 powerful your machine is.
 
+## ModuleLLM Ubuntu image and Wi-Fi setup
+
+### AXPの作成
+
+Ubuntuのx86_64 Linux環境では、`main`ブランチの
+`tools/creat_Module_LLM_ubuntu22_04_image.sh`を使用してAXPを作成します。
+リポジトリのルートから次を実行してください（ビルド中にsudo権限が必要です）。
+
+```bash
+cd tools
+./creat_Module_LLM_ubuntu22_04_image.sh
+```
+
+生成されたAXPは`tools/build_Module_LLM_ubuntu22_04/M5_LLM_ubuntu22.04_YYYYMMDD.axp`
+に保存されます。AXDLを使用してModuleLLMに書き込んでください。
+
+**macOSの場合は`macos`ブランチを使用してください。**
+ビルド方法は同ブランチの説明に従ってください。
+
+### 書き込み後のWi-Fi設定
+
+1. 書き込み後にModuleLLMを起動し、PCから`adb.exe shell`でシェルに入ります。
+
+   ```powershell
+   adb.exe shell
+   ```
+
+2. ModuleLLMのrootシェルで次を実行し、接続先のSSID、Wi-Fiパスワード、
+   国コード（日本では`JP`）を入力します。
+
+   ```bash
+   /root/setup-wifi.sh configure wlan0
+   ```
+
+   設定は`/etc/wpa_supplicant.conf`に保存されます。
+   ドングル未接続の場合は、保存後に`Interface wlan0 is missing`と表示されますが、
+   `Saved /etc/wpa_supplicant.conf (mode 600).`が表示されていれば設定は保存済みです。
+
+3. 設定後にModuleLLMをシャットダウンして電源を切り、Wi-Fiドングル
+   **TP-Link Archer T2UB**を接続してから電源を入れます。
+   起動時に保存した設定を使ってWi-Fiに自動接続します。
+
+接続状態は、再度`adb.exe shell`で入り、次のコマンドで確認できます。
+
+```bash
+/root/setup-wifi.sh status wlan0
+```
+
 ## Flashing and booting the system
 
 The Buildroot configurations generate a compressed ready-to-use SD card
