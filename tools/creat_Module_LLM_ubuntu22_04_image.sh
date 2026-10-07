@@ -9,7 +9,7 @@ fi
 
 [ -d 'build_Module_LLM_ubuntu22_04' ] || mkdir -p build_Module_LLM_ubuntu22_04/ubuntu-base-22.04.5-base-arm64
 sudo rm build_Module_LLM_ubuntu22_04/axera-image -rf
-./creat_Module_LLM_buildroot_image.sh
+./creat_Module_LLM_buildroot_image.sh || exit $?
 sudo cp build_Module_LLM_buildroot/buildroot/output/axera-image build_Module_LLM_ubuntu22_04/ -a
 [ -d 'build_Module_LLM_ubuntu22_04/axera-image' ] || { echo "not found axera-image" && exit -1; }
 
@@ -46,6 +46,7 @@ apt install bash-completion sudo ethtool resolvconf ifupdown isc-dhcp-server -y 
 apt install language-pack-en-base htop bc udev ssh rsyslog -y --option=Dpkg::Options::="--force-confold"
 apt install tee-supplicant inetutils-ping iperf3 -y --option=Dpkg::Options::="--force-confold"
 apt install python3-pip libgl1 -y
+apt install wpasupplicant -y --option=Dpkg::Options::="--force-confnew"
 
 [ -f "/var/deb-archives/install.sh" ] && /bin/bash /var/deb-archives/install.sh 
 [ -f "/var/pip-archives/install.sh" ] && /bin/bash /var/pip-archives/install.sh
@@ -53,6 +54,7 @@ EOF
 
 
 sudo chroot rootfs/ /bin/bash /var/install.sh
+sudo chroot rootfs/ /bin/bash -c 'command -v wpa_supplicant' || exit $?
 [ -f "rootfs/var/deb-archives/install.sh" ] && sudo rm -rf rootfs/var/deb-archives
 [ -f "rootfs/var/pip-archives/install.sh" ] && sudo rm -rf rootfs/var/pip-archives
 sudo rm rootfs/var/install.sh
@@ -61,6 +63,16 @@ sudo cp ../../board/m5stack/module_LLM/overlay/usr/* rootfs/usr/ -a
 sudo cp --preserve=mode,timestamps -rf ../overlay_ubuntu22_04/* rootfs/
 
 TARGET_ROOTFS_DIR=ubuntu-base-22.04.5-base-arm64
+
+# Git does not preserve mode 0600; protect Wi-Fi credentials on every build.
+sudo chmod 0600 rootfs/etc/wpa_supplicant.conf || exit $?
+sudo chmod 0755 rootfs/root/setup-wifi.sh rootfs/etc/rc.local.d/S98Wifi || exit $?
+sudo chroot rootfs/ /bin/bash -n /root/setup-wifi.sh || exit $?
+sudo chroot rootfs/ /bin/bash -c 'command -v wpa_cli && command -v wpa_passphrase && command -v dhclient && command -v flock' || exit $?
+
+# Wi-Fi is started by rc.local; disable the packaged service in the image.
+# --root changes unit links offline using the target's systemctl binary.
+sudo chroot rootfs/ /bin/systemctl --root=/ disable wpa_supplicant.service || exit $?
 
 #modify for rtc ntp
 sudo echo "*/1 *   * * *   root    /sbin/hwclock -w -f /dev/rtc0" >> $TARGET_ROOTFS_DIR/etc/crontab
@@ -124,6 +136,10 @@ sudo rm build_rootfs rootfs_sparse.ext4 rootfs_.ext4 -rf
 
 sudo tar zxf ../../board/m5stack/module_LLM/image_support/soc.tar.gz -C rootfs/soc
 [ -f "../../board/m5stack/module_LLM/image_support/opt.tar.gz" ] && sudo tar zxf ../../board/m5stack/module_LLM/image_support/opt.tar.gz -C rootfs/opt
+
+# Build the USB Wi-Fi module against the exact kernel used in this image.
+BUILDROOT_OUTPUT="../build_Module_LLM_buildroot/buildroot/output"
+sudo bash ../build_rtl8821cu_module.sh "$BUILDROOT_OUTPUT" rootfs || exit $?
 
 sudo find rootfs -name ".empty" -exec rm {} -f \;
 
