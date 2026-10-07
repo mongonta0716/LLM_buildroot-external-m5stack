@@ -1,6 +1,11 @@
 .claude
 .vscode
-tools/bin
 tools/*.axp
 tools/*.tar.gz
 **opt.tar.gz
+
+# Ignore generated images and local caches.
+*.axp
+.DS_Store
+__pycache__/
+*.pyc
