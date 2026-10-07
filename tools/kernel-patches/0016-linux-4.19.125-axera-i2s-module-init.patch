@@ -1,0 +1,78 @@
+Axera: register the I2S, TDM and codec drivers from one module entry point.
+
+The vendor Makefile links three platform drivers into axera_i2s.ko.
+Each module_platform_driver() defines init_module and cleanup_module,
+which collide when CONFIG_SND_AXERA_I2S=m. Use the bulk platform-driver
+API for registration, error rollback and reverse-order unregistration.
+
+--- a/sound/soc/axera/Makefile
++++ b/sound/soc/axera/Makefile
+@@ -2,5 +2,5 @@
+ # AXERA Platform Support
+ obj-$(CONFIG_SND_AXERA_I2S) += axera_i2s.o
+ 
+-axera_i2s-y := ax-misc.o dwc-i2s.o dwc-tdm.o ax-actt.o
++axera_i2s-y := axera-module.o ax-misc.o dwc-i2s.o dwc-tdm.o ax-actt.o
+ axera_i2s-$(CONFIG_SND_AXERA_PCM) += dwc-pcm.o dwc-tdm-pcm.o
+--- a/sound/soc/axera/dwc-i2s.c
++++ b/sound/soc/axera/dwc-i2s.c
+@@ -945,7 +945,6 @@
+ 	},
+ };
+ 
+-module_platform_driver(dw_i2s_driver);
+ 
+ MODULE_AUTHOR("Rajeev Kumar <rajeevkumar.linux@gmail.com>");
+ MODULE_DESCRIPTION("DESIGNWARE I2S SoC Interface");
+--- a/sound/soc/axera/dwc-tdm.c
++++ b/sound/soc/axera/dwc-tdm.c
+@@ -936,7 +936,6 @@
+ 	},
+ };
+ 
+-module_platform_driver(dw_tdm_driver);
+ 
+ MODULE_AUTHOR("Rajeev Kumar <rajeevkumar.linux@gmail.com>");
+ MODULE_DESCRIPTION("DESIGNWARE I2S SoC Interface");
+--- a/sound/soc/axera/ax-actt.c
++++ b/sound/soc/axera/ax-actt.c
+@@ -1308,7 +1308,6 @@
+ 		   },
+ };
+ 
+-module_platform_driver(ax_actt_driver);
+ 
+ MODULE_AUTHOR("zhangjuan@axera-tech.com");
+ MODULE_DESCRIPTION("Inner codec - actt");
+--- /dev/null
++++ b/sound/soc/axera/axera-module.c
+@@ -0,0 +1,29 @@
++// SPDX-License-Identifier: GPL-2.0-only
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++
++extern struct platform_driver dw_i2s_driver;
++extern struct platform_driver dw_tdm_driver;
++extern struct platform_driver ax_actt_driver;
++
++static struct platform_driver * const axera_drivers[] = {
++	&dw_i2s_driver,
++	&dw_tdm_driver,
++	&ax_actt_driver,
++};
++
++static int __init axera_i2s_init(void)
++{
++	return platform_register_drivers(axera_drivers, ARRAY_SIZE(axera_drivers));
++}
++module_init(axera_i2s_init);
++
++static void __exit axera_i2s_exit(void)
++{
++	platform_unregister_drivers(axera_drivers, ARRAY_SIZE(axera_drivers));
++}
++module_exit(axera_i2s_exit);
++
++MODULE_LICENSE("GPL");

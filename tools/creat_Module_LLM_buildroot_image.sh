@@ -25,9 +25,26 @@ clone_buildroot() {
 
 make_buildroot() {
     cd buildroot
-    make BR2_EXTERNAL=../../.. m5stack_module_llm_4_19_defconfig
-    [[ -v ROOTFS_SIZE ]] && sed -i 's/^\(BR2_TARGET_ROOTFS_EXT2_SIZE=\).*$/\1"'"${ROOTFS_SIZE}"'"/' .config
-    make -j `nproc`
+    make BR2_EXTERNAL=../../.. m5stack_module_llm_4_19_defconfig || return $?
+    [ -n "${ROOTFS_SIZE+x}" ] && sed -i 's/^\(BR2_TARGET_ROOTFS_EXT2_SIZE=\).*$/\1"'"${ROOTFS_SIZE}"'"/' .config
+    # Keep the release at 4.19.125 for the prebuilt vendor modules.
+    # Explicitly setting LOCALVERSION also prevents an SCM '+' suffix.
+    mkdir -p output || return $?
+    printf 'LINUX_MAKE_FLAGS += LOCALVERSION=\n' > output/kernel-build-options.mk || return $?
+    local make_args=(-f Makefile -f output/kernel-build-options.mk)
+    # Custom tarball revisions all share linux-custom in Buildroot;
+    # discard cached sources so the selected revision is actually used.
+    make "${make_args[@]}" linux-dirclean || return $?
+    if grep -q '^BR2_PACKAGE_DTBOCFG=y$' .config; then
+        make "${make_args[@]}" dtbocfg-dirclean || return $?
+    fi
+    # This vendor tarball expands the real kernel from its own Makefile.
+    # Add our patch before that Makefile applies patches/*.patch.
+    make "${make_args[@]}" linux-patch || return $?
+    cp ../../kernel-patches/0016-linux-4.19.125-axera-i2s-module-init.patch output/build/linux-custom/patches/ || return $?
+    # Reinstall modules and remove directories from older dated builds.
+    rm -rf output/target/lib/modules || return $?
+    make "${make_args[@]}" -j"$(nproc)"
 }
 
 sudo apt install debianutils sed make binutils build-essential gcc g++ bash patch gzip bzip2 perl tar cpio unzip rsync file bc git cmake p7zip-full python3 python3-pip expect libssl-dev qemu-user-static android-sdk-libsparse-utils -y
